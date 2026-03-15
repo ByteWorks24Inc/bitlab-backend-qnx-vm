@@ -72,6 +72,28 @@ public class ExecutionService {
                     .vcdBase64(vcd)
                     .build();
         }
+        if (request.getLanguage().equalsIgnoreCase("system verilog")) {
+
+            String designPath = workDir + "/design.sv";
+            String tbPath = workDir + "/tb.sv";
+
+            writeFile(designPath, request.getDesignCode());
+            writeFile(tbPath, request.getTestbenchCode());
+
+            String logs = ShellExecutor.execute(
+                    "scripts/run_sverilog.sh",
+                    designPath,
+                    tbPath
+            );
+
+            String vcd = encodeIfExists(System.getProperty("user.home") + "/sverilog/demo.vcd");
+
+            return ExecutionResponse.builder()
+                    .status("success")
+                    .logs(logs)
+                    .vcdBase64(vcd)
+                    .build();
+        }
 
         // ================= QNX =================
         if (request.getLanguage().equalsIgnoreCase("qnx")) {
