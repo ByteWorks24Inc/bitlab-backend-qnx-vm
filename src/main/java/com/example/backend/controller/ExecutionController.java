@@ -1,10 +1,13 @@
 package com.example.backend.controller;
 
 import com.example.backend.dto.ExecutionRequest;
-import com.example.backend.dto.ExecutionResponse;
 import com.example.backend.service.ExecutionService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.io.File;
 
 @RestController
 @RequestMapping("/api/execute")
@@ -18,14 +21,17 @@ public class ExecutionController {
     public Object execute(@RequestBody ExecutionRequest request) throws Exception {
         return executionService.execute(request);
     }
-    @GetMapping("/graph")
+
+    @PostMapping("/graph")
     public ResponseEntity<FileSystemResource> getGraph(
-            @RequestBody ExecutionRequest request) {
+            @RequestBody ExecutionRequest request) throws Exception {
+
         executionService.execute(request);
 
+        String language = request.getLanguage();
         String path = "";
 
-        switch (language) {
+        switch (language.toLowerCase()) {
             case "verilog":
                 path = "/home/ubuntu/verilog/demo.vcd";
                 break;
