@@ -45,7 +45,7 @@ public class ExecutionController {
                 break;
 
             case "systemverilog":
-                path = "/home/ubuntu/systemverilog/demo.vcd";
+                path = "/home/ubuntu/sverilog/demo.vcd";
                 break;
 
             default:
