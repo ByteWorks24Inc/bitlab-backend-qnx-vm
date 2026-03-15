@@ -1,65 +1,109 @@
-package com.example.backend.controller;
+package com.example.backend.service;
 
 import com.example.backend.dto.ExecutionRequest;
-import com.example.backend.service.ExecutionService;
+import com.example.backend.dto.ExecutionResponse;
+import com.example.backend.dto.QueueExecutionResponse;
+import com.example.backend.util.ShellExecutor;
 import lombok.RequiredArgsConstructor;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.stereotype.Service;
 
 import java.io.File;
+import java.io.FileWriter;
+import java.nio.file.Files;
+import java.util.Base64;
+import java.util.UUID;
 
-@RestController
-@RequestMapping("/api/execute")
+@Service
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
-public class ExecutionController {
+public class ExecutionService {
 
-    private final ExecutionService executionService;
+    private final SqsJobService sqsJobService;
 
-    // Run execution normally
-    @PostMapping
-    public Object execute(@RequestBody ExecutionRequest request) throws Exception {
-        return executionService.execute(request);
+    public Object execute(ExecutionRequest request) throws Exception {
+
+        String workDir = "workspace/" + UUID.randomUUID();
+        File dir = new File(workDir);
+        dir.mkdirs();
+
+        // ================= VERILOG =================
+        if (request.getLanguage().equalsIgnoreCase("verilog")) {
+
+            String designPath = workDir + "/design.v";
+            String tbPath = workDir + "/tb.v";
+
+            writeFile(designPath, request.getDesignCode());
+            writeFile(tbPath, request.getTestbenchCode());
+
+            String logs = ShellExecutor.execute(
+                    "scripts/run_verilog.sh",
+                    designPath,
+                    tbPath
+            );
+
+            String vcd = encodeIfExists(System.getProperty("user.home") + "/verilog/demo.vcd");
+
+            return ExecutionResponse.builder()
+                    .status("success")
+                    .logs(logs)
+                    .vcdBase64(vcd)
+                    .build();
+        }
+
+        // ================= VHDL =================
+        if (request.getLanguage().equalsIgnoreCase("vhdl")) {
+
+            String designPath = workDir + "/design.vhd";
+            String tbPath = workDir + "/tb.vhd";
+
+            writeFile(designPath, request.getDesignCode());
+            writeFile(tbPath, request.getTestbenchCode());
+
+            String logs = ShellExecutor.execute(
+                    "scripts/run_vhdl.sh",
+                    designPath,
+                    tbPath
+            );
+
+            String vcd = encodeIfExists(System.getProperty("user.home") + "/vhdl/demo.vcd");
+
+            return ExecutionResponse.builder()
+                    .status("success")
+                    .logs(logs)
+                    .vcdBase64(vcd)
+                    .build();
+        }
+
+        // ================= QNX =================
+        if (request.getLanguage().equalsIgnoreCase("qnx")) {
+
+            String jobId = UUID.randomUUID().toString();
+
+            sqsJobService.sendJob(
+                    jobId,
+                    "qnx",
+                    request.getDesignCode()
+            );
+
+            return QueueExecutionResponse.builder()
+                    .status("queued")
+                    .jobId(jobId)
+                    .build();
+        }
+
+        throw new RuntimeException("Invalid language");
     }
 
-    // Run execution + return waveform
-    @PostMapping("/graph")
-    public ResponseEntity<FileSystemResource> getGraph(
-            @RequestBody ExecutionRequest request) throws Exception {
-
-        // Execute simulation first
-        executionService.execute(request);
-
-        String language = request.getLanguage();
-        String path = "";
-
-        switch (language.toLowerCase()) {
-
-            case "verilog":
-                path = "/home/ubuntu/verilog/demo.vcd";
-                break;
-
-            case "vhdl":
-                path = "/home/ubuntu/vhdl/demo.vcd";
-                break;
-
-            case "systemverilog":
-                path = "/home/ubuntu/sverilog/demo.vcd";
-                break;
-
-            default:
-                return ResponseEntity.badRequest().build();
+    private void writeFile(String path, String content) throws Exception {
+        try (FileWriter writer = new FileWriter(path)) {
+            writer.write(content);
         }
+    }
 
+    private String encodeIfExists(String path) throws Exception {
         File file = new File(path);
+        if (!file.exists()) return null;
 
-        if (!file.exists()) {
-            return ResponseEntity.notFound().build();
-        }
-
-        return ResponseEntity.ok()
-                .header("Content-Type", "application/octet-stream")
-                .body(new FileSystemResource(file));
+        byte[] bytes = Files.readAllBytes(file.toPath());
+        return Base64.getEncoder().encodeToString(bytes);
     }
 }
