@@ -20,7 +20,8 @@ public class ExecutionController {
     }
     @GetMapping("/graph")
     public ResponseEntity<FileSystemResource> getGraph(
-            @RequestParam String language) {
+            @RequestBody ExecutionRequest request) {
+        executionService.execute(request);
 
         String path = "";
 
