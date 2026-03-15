@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/result")
+@CrossOrigin(origins = "http://localhost:5173")
 public class ExecutionResultController {
 
     @PostMapping
