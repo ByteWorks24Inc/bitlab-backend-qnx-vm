@@ -18,4 +18,37 @@ public class ExecutionController {
     public Object execute(@RequestBody ExecutionRequest request) throws Exception {
         return executionService.execute(request);
     }
+    @GetMapping("/graph")
+    public ResponseEntity<FileSystemResource> getGraph(
+            @RequestParam String language) {
+
+        String path = "";
+
+        switch (language) {
+            case "verilog":
+                path = "/home/ubuntu/verilog/demo.vcd";
+                break;
+
+            case "vhdl":
+                path = "/home/ubuntu/vhdl/demo.vcd";
+                break;
+
+            case "systemverilog":
+                path = "/home/ubuntu/sverilog/demo.vcd";
+                break;
+
+            default:
+                return ResponseEntity.badRequest().build();
+        }
+
+        File file = new File(path);
+
+        if (!file.exists()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        return ResponseEntity.ok()
+                .header("Content-Type", "application/octet-stream")
+                .body(new FileSystemResource(file));
+    }
 }
