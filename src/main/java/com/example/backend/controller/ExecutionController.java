@@ -23,39 +23,37 @@ public class ExecutionController {
     }
 
     @PostMapping("/graph")
-    public ResponseEntity<FileSystemResource> getGraph(
-            @RequestBody ExecutionRequest request) throws Exception {
+public ResponseEntity<FileSystemResource> getGraph(
+        @RequestBody ExecutionRequest request) {
 
-        executionService.execute(request);
+    String language = request.getLanguage();
+    String path = "";
 
-        String language = request.getLanguage();
-        String path = "";
+    switch (language.toLowerCase()) {
+        case "verilog":
+            path = "/home/ubuntu/verilog/demo.vcd";
+            break;
 
-        switch (language.toLowerCase()) {
-            case "verilog":
-                path = "/home/ubuntu/verilog/demo.vcd";
-                break;
+        case "vhdl":
+            path = "/home/ubuntu/vhdl/demo.vcd";
+            break;
 
-            case "vhdl":
-                path = "/home/ubuntu/vhdl/demo.vcd";
-                break;
+        case "systemverilog":
+            path = "/home/ubuntu/sverilog/demo.vcd";
+            break;
 
-            case "systemverilog":
-                path = "/home/ubuntu/sverilog/demo.vcd";
-                break;
-
-            default:
-                return ResponseEntity.badRequest().build();
-        }
-
-        File file = new File(path);
-
-        if (!file.exists()) {
-            return ResponseEntity.notFound().build();
-        }
-
-        return ResponseEntity.ok()
-                .header("Content-Type", "application/octet-stream")
-                .body(new FileSystemResource(file));
+        default:
+            return ResponseEntity.badRequest().build();
     }
+
+    File file = new File(path);
+
+    if (!file.exists()) {
+        return ResponseEntity.notFound().build();
+    }
+
+    return ResponseEntity.ok()
+            .header("Content-Type", "application/octet-stream")
+            .body(new FileSystemResource(file));
+}
 }
