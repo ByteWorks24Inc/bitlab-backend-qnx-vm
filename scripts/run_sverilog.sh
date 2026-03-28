@@ -72,7 +72,7 @@ EOF
 
 echo "Compiling with Verilator..." >> "$LOGFILE"
 
-verilator --cc design.sv --trace --exe sim_main.cpp >> "$LOGFILE" 2>&1
+verilator --cc design.sv tb.sv --top-module tb --trace --exe sim_main.cpp
 
 if [ $? -ne 0 ]; then
     echo "Compilation failed" >> "$LOGFILE"
