@@ -72,6 +72,7 @@ public class ExecutionService {
                     .vcdBase64(vcd)
                     .build();
         }
+        // ============= SYSTEM VERILOG =================
         if (request.getLanguage().equalsIgnoreCase("system verilog")) {
 
             String designPath = workDir + "/design.sv";
