@@ -22,26 +22,22 @@ public class ExecutionController {
         return executionService.execute(request);
     }
 
-    @PostMapping("/graph")
+    @GetMapping("/graph")
 public ResponseEntity<FileSystemResource> getGraph(
-        @RequestBody ExecutionRequest request) {
+        @RequestParam String language) {
 
-    String language = request.getLanguage();
     String path = "";
 
     switch (language.toLowerCase()) {
         case "verilog":
             path = "/home/ubuntu/verilog/demo.vcd";
             break;
-
         case "vhdl":
             path = "/home/ubuntu/vhdl/demo.vcd";
             break;
-
         case "systemverilog":
             path = "/home/ubuntu/sverilog/demo.vcd";
             break;
-
         default:
             return ResponseEntity.badRequest().build();
     }
