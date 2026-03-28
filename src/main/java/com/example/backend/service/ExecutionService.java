@@ -73,7 +73,7 @@ public class ExecutionService {
                     .build();
         }
         // ============= SYSTEM VERILOG =================
-        if (request.getLanguage().equalsIgnoreCase("system verilog")) {
+        if (request.getLanguage().equalsIgnoreCase("systemverilog")) {
 
             String designPath = workDir + "/design.sv";
             String tbPath = workDir + "/tb.sv";
