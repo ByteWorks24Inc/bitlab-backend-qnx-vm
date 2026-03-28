@@ -18,8 +18,8 @@ if [ ! -f "$DESIGN" ] || [ ! -f "$TB" ]; then
     exit 1
 fi
 
-SV_DIR="$HOME/systemverilog"
-LOGFILE="/tmp/systemverilog_execution.log"
+SV_DIR="$HOME/sverilog"
+LOGFILE="/tmp/sverilog_execution.log"
 
 echo "===== SYSTEMVERILOG EXECUTION STARTED =====" > "$LOGFILE"
 
