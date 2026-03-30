@@ -19,6 +19,39 @@ public class ExecutionService {
 
     private final SqsJobService sqsJobService;
 
+    public String generateWaveformImage(String vcdPath) throws Exception {
+
+    String outputPath = System.getProperty("user.home") + "/output/" 
+            + java.util.UUID.randomUUID() + ".png";
+
+    ProcessBuilder pb = new ProcessBuilder(
+            System.getProperty("user.home") + "/scripts/generate_waveform.sh",
+            vcdPath,
+            outputPath
+    );
+
+    pb.redirectErrorStream(true);
+
+    Process process = pb.start();
+
+    java.io.BufferedReader reader = new java.io.BufferedReader(
+            new java.io.InputStreamReader(process.getInputStream())
+    );
+
+    String line;
+    while ((line = reader.readLine()) != null) {
+        System.out.println(line); // logs
+    }
+
+    int exitCode = process.waitFor();
+
+    if (exitCode != 0) {
+        throw new RuntimeException("Waveform generation failed");
+    }
+
+    return outputPath;
+}
+    
     public Object execute(ExecutionRequest request) throws Exception {
 
         String workDir = "workspace/" + UUID.randomUUID();
