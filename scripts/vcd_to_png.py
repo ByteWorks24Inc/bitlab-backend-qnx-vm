@@ -7,23 +7,15 @@ output = sys.argv[2]
 
 print("Reading VCD:", vcd_file)
 
-try:
-    vcd = VCDVCD(vcd_file)
-except Exception as e:
-    print("VCD PARSE ERROR:", e)
-    exit(1)
+vcd = VCDVCD(vcd_file)
 
-signals = vcd.signals  # ✅ FIXED
-
-if not signals:
-    print("NO SIGNALS FOUND")
-    exit(1)
+signals = vcd.signals
 
 plt.figure(figsize=(10, 5))
 
 offset = 0
 
-for sig in signals[:3]:  # limit signals
+for sig in signals[:3]:
     try:
         tv = vcd[sig].tv
 
@@ -33,7 +25,10 @@ for sig in signals[:3]:  # limit signals
         for t, v in tv:
             times.append(t)
 
+            # 🔥 FIX: handle VHDL vector format
             if isinstance(v, str):
+                v = v.replace("b", "")  # remove 'b' prefix
+
                 if 'x' in v or 'z' in v:
                     values.append(0)
                 else:
@@ -44,11 +39,14 @@ for sig in signals[:3]:  # limit signals
             else:
                 values.append(int(v))
 
-        shifted = [v + offset for v in values]
+        if not values:
+            continue
+
+        shifted = [val + offset for val in values]
 
         plt.step(times, shifted, where='post', label=sig)
 
-        offset += max(values) + 2 if values else 2
+        offset += max(values) + 2
 
     except Exception as e:
         print("Skipping signal:", sig, e)
