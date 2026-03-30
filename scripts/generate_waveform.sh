@@ -1,22 +1,27 @@
 #!/bin/bash
 
-# args: <vcd_path> <output_png>
-
-VCD_PATH=$1
+VCD_FILE=$1
 OUTPUT_PNG=$2
 
-if [ ! -f "$VCD_PATH" ]; then
-  echo "❌ VCD file not found"
-  exit 1
+echo "===== WAVEFORM SCRIPT START ====="
+echo "Input VCD: $VCD_FILE"
+echo "Output PNG: $OUTPUT_PNG"
+
+# Check VCD exists
+if [ ! -f "$VCD_FILE" ]; then
+    echo "ERROR: VCD file not found"
+    exit 1
 fi
 
-echo "📊 Generating waveform..."
-
-python3 /home/ubuntu/scripts/vcd_to_png.py "$VCD_PATH" "$OUTPUT_PNG"
+# Run Python renderer
+python3 /home/ubuntu/bitlab-backend-qnx-vm/scripts/vcd_to_png.py "$VCD_FILE" "$OUTPUT_PNG"
 
 if [ $? -ne 0 ]; then
-  echo "❌ Failed"
-  exit 1
+    echo "ERROR: Python waveform generation failed"
+    exit 1
 fi
 
-echo "✅ Done"
+echo "Waveform generated successfully"
+echo "===== WAVEFORM SCRIPT END ====="
+
+exit 0
