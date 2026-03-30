@@ -27,10 +27,10 @@ public class ExecutionService {
     String outputPath = baseDir + "/waveform.png";
 
     ProcessBuilder pb = new ProcessBuilder(
-            System.getProperty("user.home") + "/scripts/generate_waveform.sh",
-            vcdPath,
-            outputPath
-    );
+    "/home/ubuntu/bitlab-backend-qnx-vm/scripts/generate_waveform.sh",
+    vcdPath,
+    outputPath
+);;
 
     pb.redirectErrorStream(true);
 
