@@ -19,10 +19,12 @@ public class ExecutionService {
 
     private final SqsJobService sqsJobService;
 
-    public String generateWaveformImage(String vcdPath) throws Exception {
+   public String generateWaveformImage(String language, String vcdPath) throws Exception {
 
-    String outputPath = System.getProperty("user.home") + "/output/" 
-            + java.util.UUID.randomUUID() + ".png";
+    String baseDir = System.getProperty("user.home") + "/" + language.toLowerCase();
+
+    // 🔥 fixed filename (overwrite)
+    String outputPath = baseDir + "/waveform.png";
 
     ProcessBuilder pb = new ProcessBuilder(
             System.getProperty("user.home") + "/scripts/generate_waveform.sh",
@@ -40,7 +42,7 @@ public class ExecutionService {
 
     String line;
     while ((line = reader.readLine()) != null) {
-        System.out.println(line); // logs
+        System.out.println(line);
     }
 
     int exitCode = process.waitFor();
