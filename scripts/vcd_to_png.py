@@ -13,7 +13,7 @@ except Exception as e:
     print("ERROR parsing VCD:", e)
     exit(1)
 
-signals = list(vcd.signals.keys())
+signals = vcd.signals
 
 if len(signals) == 0:
     print("No signals found in VCD")
