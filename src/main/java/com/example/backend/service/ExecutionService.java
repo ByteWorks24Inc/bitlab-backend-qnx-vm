@@ -22,15 +22,13 @@ public class ExecutionService {
    public String generateWaveformImage(String language, String vcdPath) throws Exception {
 
     String baseDir = System.getProperty("user.home") + "/" + language.toLowerCase();
-
-    // 🔥 fixed filename (overwrite)
     String outputPath = baseDir + "/waveform.png";
 
     ProcessBuilder pb = new ProcessBuilder(
-    "/home/ubuntu/bitlab-backend-qnx-vm/scripts/generate_waveform.sh",
-    vcdPath,
-    outputPath
-);;
+        "/home/ubuntu/bitlab-backend-qnx-vm/scripts/generate_waveform.sh",
+        vcdPath,
+        outputPath
+    );
 
     pb.redirectErrorStream(true);
 
@@ -42,10 +40,11 @@ public class ExecutionService {
 
     String line;
     while ((line = reader.readLine()) != null) {
-        System.out.println(line);
+        System.out.println(line); // 🔥 important debug
     }
 
     int exitCode = process.waitFor();
+    System.out.println("EXIT CODE: " + exitCode);
 
     if (exitCode != 0) {
         throw new RuntimeException("Waveform generation failed");
