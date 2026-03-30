@@ -7,42 +7,55 @@ output = sys.argv[2]
 
 print("Reading VCD:", vcd_file)
 
-vcd = VCDVCD(vcd_file)
+try:
+    vcd = VCDVCD(vcd_file)
+except Exception as e:
+    print("ERROR parsing VCD:", e)
+    exit(1)
 
 signals = list(vcd.signals.keys())
+
+if len(signals) == 0:
+    print("No signals found in VCD")
+    exit(1)
 
 plt.figure(figsize=(10, 5))
 
 offset = 0
 
-for sig in signals[:3]:  # limit to first 3 signals
-    tv = vcd[sig].tv
+for sig in signals[:3]:
+    try:
+        tv = vcd[sig].tv
 
-    times = []
-    values = []
+        times = []
+        values = []
 
-    for t, v in tv:
-        times.append(t)
+        for t, v in tv:
+            times.append(t)
 
-        # Convert binary string → integer
-        if 'x' in v or 'z' in v:
-            values.append(0)
-        else:
-            values.append(int(v, 2))
+            if isinstance(v, str) and ('x' in v or 'z' in v):
+                values.append(0)
+            else:
+                try:
+                    values.append(int(v, 2))
+                except:
+                    values.append(0)
 
-    # Offset signals vertically so they don't overlap
-    shifted = [val + offset for val in values]
+        shifted = [val + offset for val in values]
 
-    plt.step(times, shifted, where='post', label=sig)
+        plt.step(times, shifted, where='post', label=sig)
 
-    offset += max(values) + 2  # spacing between signals
+        offset += max(values) + 2 if values else 2
+
+    except Exception as e:
+        print(f"Skipping signal {sig}: {e}")
 
 plt.xlabel("Time")
 plt.ylabel("Signals")
-plt.title("Actual Waveform")
+plt.title("Waveform")
 plt.legend()
 plt.grid(True)
 
 plt.savefig(output)
 
-print("PNG generated at:", output)
+print("PNG generated:", output)
