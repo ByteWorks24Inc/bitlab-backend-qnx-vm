@@ -22,34 +22,38 @@ public class ExecutionController {
         return executionService.execute(request);
     }
 
-    @GetMapping("/graph")
+   @GetMapping("/graph")
 public ResponseEntity<FileSystemResource> getGraph(
-        @RequestParam String language) {
+        @RequestParam String language) throws Exception {
 
-    String path = "";
+    String vcdPath = "";
 
     switch (language.toLowerCase()) {
         case "verilog":
-            path = "/home/ubuntu/verilog/demo.vcd";
+            vcdPath = System.getProperty("user.home") + "/verilog/demo.vcd";
             break;
         case "vhdl":
-            path = "/home/ubuntu/vhdl/demo.vcd";
+            vcdPath = System.getProperty("user.home") + "/vhdl/demo.vcd";
             break;
         case "systemverilog":
-            path = "/home/ubuntu/sverilog/demo.vcd";
+            vcdPath = System.getProperty("user.home") + "/sverilog/demo.vcd";
             break;
         default:
             return ResponseEntity.badRequest().build();
     }
 
-    File file = new File(path);
-
-    if (!file.exists()) {
+    File vcdFile = new File(vcdPath);
+    if (!vcdFile.exists()) {
         return ResponseEntity.notFound().build();
     }
 
+    // 🔥 NEW: generate PNG
+    String imagePath = executionService.generateWaveformImage(vcdPath);
+
+    File imageFile = new File(imagePath);
+
     return ResponseEntity.ok()
-            .header("Content-Type", "application/octet-stream")
-            .body(new FileSystemResource(file));
+            .header("Content-Type", "image/png")
+            .body(new FileSystemResource(imageFile));
 }
 }
