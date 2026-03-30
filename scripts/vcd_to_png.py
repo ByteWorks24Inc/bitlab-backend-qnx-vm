@@ -10,20 +10,20 @@ print("Reading VCD:", vcd_file)
 try:
     vcd = VCDVCD(vcd_file)
 except Exception as e:
-    print("ERROR parsing VCD:", e)
+    print("VCD PARSE ERROR:", e)
     exit(1)
 
-signals = vcd.signals
+signals = vcd.signals  # ✅ FIXED
 
-if len(signals) == 0:
-    print("No signals found in VCD")
+if not signals:
+    print("NO SIGNALS FOUND")
     exit(1)
 
 plt.figure(figsize=(10, 5))
 
 offset = 0
 
-for sig in signals[:3]:
+for sig in signals[:3]:  # limit signals
     try:
         tv = vcd[sig].tv
 
@@ -33,22 +33,25 @@ for sig in signals[:3]:
         for t, v in tv:
             times.append(t)
 
-            if isinstance(v, str) and ('x' in v or 'z' in v):
-                values.append(0)
-            else:
-                try:
-                    values.append(int(v, 2))
-                except:
+            if isinstance(v, str):
+                if 'x' in v or 'z' in v:
                     values.append(0)
+                else:
+                    try:
+                        values.append(int(v, 2))
+                    except:
+                        values.append(0)
+            else:
+                values.append(int(v))
 
-        shifted = [val + offset for val in values]
+        shifted = [v + offset for v in values]
 
         plt.step(times, shifted, where='post', label=sig)
 
         offset += max(values) + 2 if values else 2
 
     except Exception as e:
-        print(f"Skipping signal {sig}: {e}")
+        print("Skipping signal:", sig, e)
 
 plt.xlabel("Time")
 plt.ylabel("Signals")
