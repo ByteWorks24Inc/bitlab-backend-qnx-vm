@@ -21,10 +21,9 @@ public class ExecutionController {
     public Object execute(@RequestBody ExecutionRequest request) throws Exception {
         return executionService.execute(request);
     }
-
-   @GetMapping("/graph")
+@GetMapping("/graph")
 public ResponseEntity<FileSystemResource> getGraph(
-        @RequestParam String language) throws Exception {
+        @RequestParam String language) {
 
     String vcdPath = "";
 
@@ -43,17 +42,15 @@ public ResponseEntity<FileSystemResource> getGraph(
     }
 
     File vcdFile = new File(vcdPath);
+
     if (!vcdFile.exists()) {
         return ResponseEntity.notFound().build();
     }
 
-    // 🔥 NEW: generate PNG
-    String imagePath = executionService.generateWaveformImage(language, vcdPath);
-
-    File imageFile = new File(imagePath);
-
+    // ✅ RETURN RAW VCD (NO PNG, NO PROCESSING)
     return ResponseEntity.ok()
-            .header("Content-Type", "image/png")
-            .body(new FileSystemResource(imageFile));
+            .header("Content-Type", "text/plain")
+            .header("Content-Disposition", "inline; filename=\"demo.vcd\"")
+            .body(new FileSystemResource(vcdFile));
 }
 }
