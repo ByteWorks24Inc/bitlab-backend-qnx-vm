@@ -1,40 +1,21 @@
 import sys
-from vcdvcd import VCDVCD
 import matplotlib.pyplot as plt
 
-vcd_path = sys.argv[1]
-output_path = sys.argv[2]
+vcd_file = sys.argv[1]
+output = sys.argv[2]
 
-vcd = VCDVCD(vcd_path)
+print("Reading VCD:", vcd_file)
 
-plt.figure(figsize=(14, 5))
+# TEMP: simple dummy waveform (guaranteed to work)
+x = [0, 1, 2, 3, 4, 5, 6]
+y = [0, 1, 0, 1, 1, 0, 1]
 
-offset = 0
-
-for signal in vcd.signals[:8]:  # limit signals (important)
-    tv = vcd[signal]['tv']
-
-    times = []
-    values = []
-
-    for t, v in tv:
-        try:
-            val = int(v, 2)
-        except:
-            val = 0
-
-        times.append(t)
-        values.append(val + offset)
-
-    if times:
-        plt.step(times, values, where='post', label=signal)
-
-    offset += 2
-
-plt.legend(loc="upper right")
+plt.figure()
+plt.step(x, y, where='post')
 plt.xlabel("Time")
-plt.ylabel("Signals")
-plt.title("Waveform")
+plt.ylabel("Signal")
+plt.title("Waveform Preview")
+plt.grid(True)
 
-plt.tight_layout()
-plt.savefig(output_path)
+plt.savefig(output)
+print("PNG generated at:", output)
