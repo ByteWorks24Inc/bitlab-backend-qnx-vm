@@ -48,7 +48,7 @@ public ResponseEntity<FileSystemResource> getGraph(
     }
 
     // 🔥 NEW: generate PNG
-    String imagePath = executionService.generateWaveformImage(vcdPath);
+    String imagePath = executionService.generateWaveformImage(language, vcdPath);
 
     File imageFile = new File(imagePath);
 
