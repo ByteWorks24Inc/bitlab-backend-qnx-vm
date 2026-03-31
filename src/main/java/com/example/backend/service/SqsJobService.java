@@ -16,7 +16,7 @@ public class SqsJobService {
     private final SqsClient sqsClient;
 
     private final String queueUrl =
-            "https://sqs.us-east-2.amazonaws.com/160927904719/code-execution-queue";
+            "https://sqs.us-east-2.amazonaws.com/180273188019/bitlab-qnx-queue";
 
     private final ObjectMapper mapper = new ObjectMapper();
 
