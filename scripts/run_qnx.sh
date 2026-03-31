@@ -7,7 +7,7 @@
 
 C_FILE=$1
 
-QUEUE_URL="https://sqs.us-east-2.amazonaws.com/160927904719/code-execution-queue"
+QUEUE_URL="https://sqs.us-east-2.amazonaws.com/180273188019/bitlab-qnx-queue"
 REGION="us-east-2"
 
 ############################################
