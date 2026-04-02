@@ -23,5 +23,5 @@ fi
 
 echo "Waveform generated successfully"
 echo "===== WAVEFORM SCRIPT END ====="
-
+echo "WAVEFORM COMPLETED"
 exit 0
