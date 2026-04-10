@@ -15,4 +15,6 @@ public class Question {
     private String questionDescription;
     private List<TestCase> testCaseList;
     private List<String> tags;
+    private Long InputTextId;
+    private Long OutputTextId;
 }

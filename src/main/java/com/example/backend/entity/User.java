@@ -4,11 +4,14 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
 
+
 @Entity
 @Table(name = "users")
 @Getter
 @Setter
 @Builder
+@AllArgsConstructor   // ✅ add this
+@NoArgsConstructor    // ✅ add this
 public class User {
 
     @Id
@@ -23,25 +26,11 @@ public class User {
 
     private LocalDateTime createdAt;
 
+    private int questionSolved;
+    private int testCaseSolved;
+
     @PrePersist
     public void prePersist() {
         this.createdAt = LocalDateTime.now();
     }
-    private int questionSolved;
-    private int testCaseSolved;
-
-    public User(Long id, String email, String password, LocalDateTime createdAt) {
-        this.id = id;
-        this.email = email;
-        this.password = password;
-        this.createdAt = createdAt;
-        this.questionSolved = 0;
-        this.testCaseSolved = 0;
-    }
-
-    public User() {
-        this.questionSolved = 0;
-        this.testCaseSolved = 0;
-    }
-
 }
