@@ -8,8 +8,6 @@ import java.time.LocalDateTime;
 @Table(name = "users")
 @Getter
 @Setter
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
 public class User {
 
@@ -29,4 +27,21 @@ public class User {
     public void prePersist() {
         this.createdAt = LocalDateTime.now();
     }
+    private int questionSolved;
+    private int testCaseSolved;
+
+    public User(Long id, String email, String password, LocalDateTime createdAt) {
+        this.id = id;
+        this.email = email;
+        this.password = password;
+        this.createdAt = createdAt;
+        this.questionSolved = 0;
+        this.testCaseSolved = 0;
+    }
+
+    public User() {
+        this.questionSolved = 0;
+        this.testCaseSolved = 0;
+    }
+
 }
