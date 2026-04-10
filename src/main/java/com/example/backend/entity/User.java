@@ -10,8 +10,8 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @Builder
-@AllArgsConstructor   // ✅ add this
-@NoArgsConstructor    // ✅ add this
+@AllArgsConstructor
+@NoArgsConstructor
 public class User {
 
     @Id
