@@ -1,5 +1,6 @@
 #!/bin/bash
 
+
 VCD_FILE=$1
 OUTPUT_PNG=$2
 
