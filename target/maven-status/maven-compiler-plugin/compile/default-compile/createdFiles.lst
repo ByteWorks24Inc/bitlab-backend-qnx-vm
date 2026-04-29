@@ -9,7 +9,6 @@ com\example\backend\service\SqsJobService.class
 com\example\backend\dto\ExecutionRequest.class
 com\example\backend\service\AuthService.class
 com\example\backend\entity\User$UserBuilder.class
-com\example\backend\config\CorsConfig$1.class
 com\example\backend\util\ShellExecutor.class
 com\example\backend\repository\UserRepository.class
 com\example\backend\dto\KafkaExecutionMessage.class

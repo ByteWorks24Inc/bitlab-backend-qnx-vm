@@ -2,6 +2,7 @@ C:\Projects\bitlab2\bitlab-backend-qnx-vm\src\main\java\com\example\backend\Back
 C:\Projects\bitlab2\bitlab-backend-qnx-vm\src\main\java\com\example\backend\config\CorsConfig.java
 C:\Projects\bitlab2\bitlab-backend-qnx-vm\src\main\java\com\example\backend\config\JwtFilter.java
 C:\Projects\bitlab2\bitlab-backend-qnx-vm\src\main\java\com\example\backend\config\JwtUtil.java
+C:\Projects\bitlab2\bitlab-backend-qnx-vm\src\main\java\com\example\backend\config\KafkaConfig.java
 C:\Projects\bitlab2\bitlab-backend-qnx-vm\src\main\java\com\example\backend\config\SecurityConfig.java
 C:\Projects\bitlab2\bitlab-backend-qnx-vm\src\main\java\com\example\backend\config\SqsConfig.java
 C:\Projects\bitlab2\bitlab-backend-qnx-vm\src\main\java\com\example\backend\controller\AuthController.java
