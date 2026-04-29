@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.Map;
+import org.springframework.http.ResponseEntity;
+
 @RestController
 @RequestMapping("/api/result")
 @CrossOrigin(origins = "*")
@@ -23,24 +25,21 @@ public class ExecutionResultController {
 
     @PostMapping
     public void receiveResult(@RequestBody ExecutionResultRequest request) {
-
-        store.save(request.getJobId(), request.getLogs());
-
+        store.save(request.getJobId(), ExecutionResult.builder()
+                .status("DONE")
+                .logs(request.getLogs())
+                .build());
         System.out.println("Job result received: " + request.getJobId());
     }
 
     @GetMapping("/{jobId}")
-    public Map<String, String> getResult(@PathVariable String jobId) {
+    public ResponseEntity<?> getResult(@PathVariable String jobId) {
+        ExecutionResult result = store.get(jobId);
 
-        String logs = store.get(jobId);
-
-        if (logs == null) {
-            return Map.of("status", "RUNNING");
+        if (result == null) {
+            return ResponseEntity.ok(Map.of("status", "RUNNING"));
         }
-
-        return Map.of(
-                "status", "DONE",
-                "logs", logs
-        );
+        
+        return ResponseEntity.ok(result);
     }
 }

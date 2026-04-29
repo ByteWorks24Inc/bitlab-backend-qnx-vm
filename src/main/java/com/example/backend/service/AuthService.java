@@ -1,4 +1,6 @@
 package com.example.backend.service;
+
+import com.example.backend.config.JwtUtil;
 import com.example.backend.entity.User;
 import com.example.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +14,7 @@ import java.util.Optional;
 public class AuthService {
 
     private final UserRepository userRepository;
+    private final JwtUtil jwtUtil;
 
     public String register(String email, String password) {
 
@@ -34,10 +37,10 @@ public class AuthService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         if (!password.equals(user.getPassword())) {
-            return "Invalid password";
+            throw new RuntimeException("Invalid password");
         }
 
-        return "Login successful";
+        return jwtUtil.generateToken(email);
     }
 
     public List<User> getAllUsers() {
