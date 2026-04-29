@@ -18,37 +18,40 @@ public class VerilogVhdlExecutor {
         File dir = new File(workDir);
         dir.mkdirs();
 
-        String designPath = workDir + "/design.v";
-        String tbPath = workDir + "/tb.v";
-
-        writeFile(designPath, designCode);
-        writeFile(tbPath, tbCode);
+        writeFile(workDir + "/design.v", designCode);
+        writeFile(workDir + "/tb.v", tbCode);
 
         StringBuilder logs = new StringBuilder();
 
-        // Compile
+        // Stage 1: Compile
+        logs.append("[STAGE:COMPILE] Compiling Verilog sources...\n");
         ProcessBuilder pbCompile = new ProcessBuilder("iverilog", "-o", "output.vvp", "design.v", "tb.v");
         pbCompile.directory(dir);
         pbCompile.redirectErrorStream(true);
         Process pCompile = pbCompile.start();
-        logs.append(readOutput(pCompile));
+        String compileOut = readOutput(pCompile);
+        if (!compileOut.isBlank()) logs.append(compileOut);
         if (pCompile.waitFor() != 0) {
-            logs.append("\nCompilation failed");
+            logs.append("[STAGE:FAIL] Compilation failed.\n");
             return logs.toString();
         }
+        logs.append("[STAGE:OK] Compilation successful.\n");
 
-        // Run
+        // Stage 2: Run simulation
+        logs.append("[STAGE:SIM] Running simulation...\n");
         ProcessBuilder pbRun = new ProcessBuilder("vvp", "output.vvp");
         pbRun.directory(dir);
         pbRun.redirectErrorStream(true);
         Process pRun = pbRun.start();
-        
-        boolean finished = pRun.waitFor(5, TimeUnit.SECONDS);
+
+        boolean finished = pRun.waitFor(10, TimeUnit.SECONDS);
         if (!finished) {
             pRun.destroy();
-            logs.append("\nExecution timed out");
+            logs.append("[STAGE:FAIL] Simulation timed out.\n");
         } else {
-            logs.append(readOutput(pRun));
+            String simOut = readOutput(pRun);
+            if (!simOut.isBlank()) logs.append(simOut);
+            logs.append("[STAGE:DONE] Simulation complete. Waveform saved.\n");
         }
 
         return logs.toString();
@@ -58,54 +61,72 @@ public class VerilogVhdlExecutor {
         File dir = new File(workDir);
         dir.mkdirs();
 
-        // Clean code (remove backticks)
         designCode = designCode.replace("`", "");
         tbCode = tbCode.replace("`", "");
 
-        String designPath = workDir + "/design.vhd";
-        String tbPath = workDir + "/tb.vhd";
-
-        writeFile(designPath, designCode);
-        writeFile(tbPath, tbCode);
+        writeFile(workDir + "/design.vhd", designCode);
+        writeFile(workDir + "/tb.vhd", tbCode);
 
         StringBuilder logs = new StringBuilder();
 
-        // Analyze design
-        ProcessBuilder pbAnalyzeD = new ProcessBuilder("ghdl", "-a", "design.vhd");
+        // Stage 1: Analyze design
+        logs.append("[STAGE:ANALYZE] Analyzing design unit...\n");
+        ProcessBuilder pbAnalyzeD = new ProcessBuilder("ghdl", "-a", "--std=08", "design.vhd");
         pbAnalyzeD.directory(dir);
         pbAnalyzeD.redirectErrorStream(true);
         Process pAnalyzeD = pbAnalyzeD.start();
-        logs.append(readOutput(pAnalyzeD));
-        if (pAnalyzeD.waitFor() != 0) return logs.append("\nAnalysis failed").toString();
+        String analyzeOut = readOutput(pAnalyzeD);
+        if (!analyzeOut.isBlank()) logs.append(analyzeOut);
+        if (pAnalyzeD.waitFor() != 0) {
+            logs.append("[STAGE:FAIL] Design analysis failed.\n");
+            return logs.toString();
+        }
+        logs.append("[STAGE:OK] Design analyzed successfully.\n");
 
-        // Analyze tb
-        ProcessBuilder pbAnalyzeT = new ProcessBuilder("ghdl", "-a", "tb.vhd");
+        // Stage 2: Analyze testbench
+        logs.append("[STAGE:ANALYZE] Analyzing testbench...\n");
+        ProcessBuilder pbAnalyzeT = new ProcessBuilder("ghdl", "-a", "--std=08", "tb.vhd");
         pbAnalyzeT.directory(dir);
         pbAnalyzeT.redirectErrorStream(true);
         Process pAnalyzeT = pbAnalyzeT.start();
-        logs.append(readOutput(pAnalyzeT));
-        if (pAnalyzeT.waitFor() != 0) return logs.append("\nAnalysis failed").toString();
+        String tbOut = readOutput(pAnalyzeT);
+        if (!tbOut.isBlank()) logs.append(tbOut);
+        if (pAnalyzeT.waitFor() != 0) {
+            logs.append("[STAGE:FAIL] Testbench analysis failed.\n");
+            return logs.toString();
+        }
+        logs.append("[STAGE:OK] Testbench analyzed successfully.\n");
 
-        // Elaborate
-        ProcessBuilder pbElab = new ProcessBuilder("ghdl", "-e", "tb");
+        // Stage 3: Elaborate
+        logs.append("[STAGE:ELAB] Elaborating design...\n");
+        ProcessBuilder pbElab = new ProcessBuilder("ghdl", "-e", "--std=08", "tb");
         pbElab.directory(dir);
         pbElab.redirectErrorStream(true);
         Process pElab = pbElab.start();
-        logs.append(readOutput(pElab));
-        if (pElab.waitFor() != 0) return logs.append("\nElaboration failed").toString();
+        String elabOut = readOutput(pElab);
+        if (!elabOut.isBlank()) logs.append(elabOut);
+        if (pElab.waitFor() != 0) {
+            logs.append("[STAGE:FAIL] Elaboration failed.\n");
+            return logs.toString();
+        }
+        logs.append("[STAGE:OK] Elaboration complete.\n");
 
-        // Run
-        ProcessBuilder pbRun = new ProcessBuilder("ghdl", "-r", "tb", "--vcd=demo.vcd");
+        // Stage 4: Run simulation with 1000ns stop-time buffer so the last waveform edge is visible
+        logs.append("[STAGE:SIM] Running simulation...\n");
+        ProcessBuilder pbRun = new ProcessBuilder(
+                "ghdl", "-r", "--std=08", "tb", "--vcd=demo.vcd", "--stop-time=1000ns");
         pbRun.directory(dir);
         pbRun.redirectErrorStream(true);
         Process pRun = pbRun.start();
-        
-        boolean finished = pRun.waitFor(5, TimeUnit.SECONDS);
+
+        boolean finished = pRun.waitFor(10, TimeUnit.SECONDS);
         if (!finished) {
             pRun.destroy();
-            logs.append("\nExecution timed out");
+            logs.append("[STAGE:FAIL] Simulation timed out.\n");
         } else {
-            logs.append(readOutput(pRun));
+            String simOut = readOutput(pRun);
+            if (!simOut.isBlank()) logs.append(simOut);
+            logs.append("[STAGE:DONE] Simulation complete. Waveform saved.\n");
         }
 
         return logs.toString();

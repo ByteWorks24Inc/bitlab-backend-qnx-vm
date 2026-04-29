@@ -26,6 +26,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/execute", "/api/execute/**").permitAll()
                 .requestMatchers("/api/result", "/api/result/**").permitAll()
+                .requestMatchers("/api/worker/**").permitAll()
                 .requestMatchers("/actuator/**").permitAll()
                 .anyRequest().authenticated()
             )
