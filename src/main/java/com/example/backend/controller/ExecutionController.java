@@ -12,7 +12,6 @@ import java.io.File;
 @RestController
 @RequestMapping("/api/execute")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 public class ExecutionController {
 
     private final ExecutionService executionService;

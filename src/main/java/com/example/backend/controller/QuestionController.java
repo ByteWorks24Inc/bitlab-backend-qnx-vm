@@ -4,21 +4,18 @@ import com.example.backend.entity.Question;
 import com.example.backend.entity.TestCase;
 import com.example.backend.service.QuestionService;
 import com.example.backend.service.TestCaseService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
 
 @RestController
-@CrossOrigin(origins = "*")
-@RequestMapping("/api")
+@RequestMapping("/api/questions")
+@RequiredArgsConstructor
 public class QuestionController {
     private final QuestionService questionService;
     private final TestCaseService testCaseService;
-    public QuestionController(QuestionService questionService, TestCaseService testCaseService){
-        this.questionService = questionService;
-        this.testCaseService = testCaseService;
-    }
     @GetMapping("/question")
     public List<Question> getAll1(){
         return questionService.getAll();
