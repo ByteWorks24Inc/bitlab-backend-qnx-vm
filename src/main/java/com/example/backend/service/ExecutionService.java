@@ -18,6 +18,7 @@ public class ExecutionService {
     private final VerilogVhdlExecutor verilogVhdlExecutor;
     private final ExecutionResultStore resultStore;
     private final KafkaExecutionListener errorExtractor;
+    private final VmCExecutor vmCExecutor;
 
     @Value("${execution.workdir.base:${user.home}/bitlab-jobs}")
     private String workDirBase;
@@ -26,9 +27,30 @@ public class ExecutionService {
 
         String language = request.getLanguage().toLowerCase();
 
-        // ================= QNX → AWS SQS =================
+        // ================= QNX → local VMware C VM (or AWS SQS fallback) =================
         if (language.equals("qnx")) {
             String jobId = UUID.randomUUID().toString();
+
+            if (vmCExecutor.isEnabled()) {
+                resultStore.save(jobId, ExecutionResult.builder().status("RUNNING").logs("").build());
+                String code = request.getDesignCode();
+                CompletableFuture.runAsync(() -> {
+                    try {
+                        String logs = vmCExecutor.execute(workDirBase + "/qnx-" + jobId, code);
+                        resultStore.save(jobId, ExecutionResult.builder()
+                                .status("DONE")
+                                .logs(logs)
+                                .build());
+                    } catch (Exception e) {
+                        resultStore.save(jobId, ExecutionResult.builder()
+                                .status("DONE")
+                                .logs("[STAGE:ERROR] QNX C VM execution failed: " + e.getMessage() + "\n")
+                                .build());
+                    }
+                });
+                return QueueExecutionResponse.builder().status("queued").jobId(jobId).build();
+            }
+
             sqsJobService.sendJob(jobId, "qnx", request.getDesignCode());
             resultStore.save(jobId, ExecutionResult.builder().status("RUNNING").logs("").build());
             return QueueExecutionResponse.builder().status("queued").jobId(jobId).build();

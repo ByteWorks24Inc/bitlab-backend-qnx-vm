@@ -1,5 +1,6 @@
 package com.example.backend.controller;
 
+import com.example.backend.service.VmCExecutor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,6 +14,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @RequestMapping("/api/worker")
 @RequiredArgsConstructor
 public class WorkerHealthController {
+
+    private final VmCExecutor vmCExecutor;
 
     private static final AtomicLong    lastHeartbeat    = new AtomicLong(0);
     private static final AtomicBoolean explicitlyOnline = new AtomicBoolean(false);
@@ -49,6 +52,20 @@ public class WorkerHealthController {
     /** Called by the frontend to check worker status */
     @GetMapping("/qnx/status")
     public ResponseEntity<Map<String, Object>> status() {
+        // When the local VMware C runner is configured, report its state so the
+        // QNX lab can execute without the AWS SQS worker.
+        if (vmCExecutor.isEnabled()) {
+            boolean online = vmCExecutor.isAvailable();
+            return ResponseEntity.ok(Map.of(
+                "online", online,
+                "mode", "vm",
+                "target", vmCExecutor.describeTarget(),
+                "message", online
+                    ? "QNX C runner VM is online (" + vmCExecutor.describeTarget() + ")."
+                    : "QNX C runner VM is offline. Start bitlab-c-vm in VMware Workstation."
+            ));
+        }
+
         // Explicit disconnect takes priority
         if (!explicitlyOnline.get() && lastHeartbeat.get() == 0) {
             return ResponseEntity.ok(Map.of(
