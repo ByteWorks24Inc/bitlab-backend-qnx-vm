@@ -1,5 +1,6 @@
 package com.example.backend.service;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
@@ -7,12 +8,45 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Base64;
-import java.util.UUID;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 @Service
 public class VerilogVhdlExecutor {
+
+    @Value("${bitlab.hdl.use-wsl:true}")
+    private boolean useWsl;
+
+    @Value("${bitlab.hdl.wsl-distro:Ubuntu-BitLab}")
+    private String wslDistro;
+
+    /**
+     * Builds the process command. When WSL is enabled, HDL tools are executed
+     * inside the Ubuntu distro (which has iverilog + ghdl installed) using the
+     * inherited working directory, e.g. wsl -d Ubuntu-BitLab --exec iverilog ...
+     */
+    private ProcessBuilder command(File dir, String... command) {
+        List<String> full = new ArrayList<>();
+        if (useWsl) {
+            full.add("wsl.exe");
+            full.add("-d");
+            full.add(wslDistro);
+            full.add("--exec");
+        }
+        full.addAll(Arrays.asList(command));
+
+        ProcessBuilder pb = new ProcessBuilder(full);
+        pb.directory(dir);
+        pb.redirectErrorStream(true);
+        if (useWsl) {
+            // Force UTF-8 instead of wsl.exe's UTF-16 management output.
+            pb.environment().put("WSL_UTF8", "1");
+        }
+        return pb;
+    }
 
     public String executeVerilog(String workDir, String designCode, String tbCode) throws Exception {
         File dir = new File(workDir);
@@ -25,9 +59,7 @@ public class VerilogVhdlExecutor {
 
         // Stage 1: Compile
         logs.append("[STAGE:COMPILE] Compiling Verilog sources...\n");
-        ProcessBuilder pbCompile = new ProcessBuilder("iverilog", "-o", "output.vvp", "design.v", "tb.v");
-        pbCompile.directory(dir);
-        pbCompile.redirectErrorStream(true);
+        ProcessBuilder pbCompile = command(dir, "iverilog", "-o", "output.vvp", "design.v", "tb.v");
         Process pCompile = pbCompile.start();
         String compileOut = readOutput(pCompile);
         if (!compileOut.isBlank()) logs.append(compileOut);
@@ -39,9 +71,7 @@ public class VerilogVhdlExecutor {
 
         // Stage 2: Run simulation
         logs.append("[STAGE:SIM] Running simulation...\n");
-        ProcessBuilder pbRun = new ProcessBuilder("vvp", "output.vvp");
-        pbRun.directory(dir);
-        pbRun.redirectErrorStream(true);
+        ProcessBuilder pbRun = command(dir, "vvp", "output.vvp");
         Process pRun = pbRun.start();
 
         boolean finished = pRun.waitFor(10, TimeUnit.SECONDS);
@@ -71,9 +101,7 @@ public class VerilogVhdlExecutor {
 
         // Stage 1: Analyze design
         logs.append("[STAGE:ANALYZE] Analyzing design unit...\n");
-        ProcessBuilder pbAnalyzeD = new ProcessBuilder("ghdl", "-a", "--std=08", "design.vhd");
-        pbAnalyzeD.directory(dir);
-        pbAnalyzeD.redirectErrorStream(true);
+        ProcessBuilder pbAnalyzeD = command(dir, "ghdl", "-a", "--std=08", "design.vhd");
         Process pAnalyzeD = pbAnalyzeD.start();
         String analyzeOut = readOutput(pAnalyzeD);
         if (!analyzeOut.isBlank()) logs.append(analyzeOut);
@@ -85,9 +113,7 @@ public class VerilogVhdlExecutor {
 
         // Stage 2: Analyze testbench
         logs.append("[STAGE:ANALYZE] Analyzing testbench...\n");
-        ProcessBuilder pbAnalyzeT = new ProcessBuilder("ghdl", "-a", "--std=08", "tb.vhd");
-        pbAnalyzeT.directory(dir);
-        pbAnalyzeT.redirectErrorStream(true);
+        ProcessBuilder pbAnalyzeT = command(dir, "ghdl", "-a", "--std=08", "tb.vhd");
         Process pAnalyzeT = pbAnalyzeT.start();
         String tbOut = readOutput(pAnalyzeT);
         if (!tbOut.isBlank()) logs.append(tbOut);
@@ -99,9 +125,7 @@ public class VerilogVhdlExecutor {
 
         // Stage 3: Elaborate
         logs.append("[STAGE:ELAB] Elaborating design...\n");
-        ProcessBuilder pbElab = new ProcessBuilder("ghdl", "-e", "--std=08", "tb");
-        pbElab.directory(dir);
-        pbElab.redirectErrorStream(true);
+        ProcessBuilder pbElab = command(dir, "ghdl", "-e", "--std=08", "tb");
         Process pElab = pbElab.start();
         String elabOut = readOutput(pElab);
         if (!elabOut.isBlank()) logs.append(elabOut);
@@ -113,10 +137,8 @@ public class VerilogVhdlExecutor {
 
         // Stage 4: Run simulation with 1000ns stop-time buffer so the last waveform edge is visible
         logs.append("[STAGE:SIM] Running simulation...\n");
-        ProcessBuilder pbRun = new ProcessBuilder(
+        ProcessBuilder pbRun = command(dir,
                 "ghdl", "-r", "--std=08", "tb", "--vcd=demo.vcd", "--stop-time=1000ns");
-        pbRun.directory(dir);
-        pbRun.redirectErrorStream(true);
         Process pRun = pbRun.start();
 
         boolean finished = pRun.waitFor(10, TimeUnit.SECONDS);
