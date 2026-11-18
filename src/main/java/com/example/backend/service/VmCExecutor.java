@@ -139,8 +139,13 @@ public class VmCExecutor {
                 sshCommand("cd " + jobDir + " && timeout -k 2s " + runTimeoutSeconds + "s ./prog 2>&1"),
                 timeoutSeconds);
         if (!execution.output.isBlank()) {
-            logs.append(execution.output);
-            if (!execution.output.endsWith("\n")) logs.append('\n');
+            // Tag the program's own stdout so the UI can show it separately from the stage log.
+            String[] lines = execution.output.split("\n", -1);
+            int last = lines.length - 1;
+            while (last >= 0 && lines[last].isEmpty()) last--;
+            for (int i = 0; i <= last; i++) {
+                logs.append("[STDOUT] ").append(lines[i]).append('\n');
+            }
         }
         if (execution.exitCode == 124) {
             logs.append("[STAGE:TIMEOUT] Program exceeded ").append(runTimeoutSeconds).append(" seconds and was stopped.\n");
