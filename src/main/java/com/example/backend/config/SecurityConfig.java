@@ -25,6 +25,7 @@ public class SecurityConfig {
                 .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/execute", "/api/execute/**").permitAll()
+                .requestMatchers("/api/quality", "/api/quality/**").permitAll()
                 .requestMatchers("/api/result", "/api/result/**").permitAll()
                 .requestMatchers("/api/worker/**").permitAll()
                 .requestMatchers("/actuator/**").permitAll()
