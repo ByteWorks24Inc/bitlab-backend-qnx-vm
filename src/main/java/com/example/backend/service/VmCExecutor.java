@@ -29,6 +29,9 @@ public class VmCExecutor {
     @Value("${qnx.vm.host:}")
     private String host;
 
+    @Value("${qnx.vm.host-file:${user.home}/VMs/bitlab-c-vm/ip.txt}")
+    private String hostFile;
+
     @Value("${qnx.vm.user:bitlab}")
     private String user;
 
@@ -56,12 +59,34 @@ public class VmCExecutor {
 
     /** True when the VM runner is configured (mode=vm and a host is known). */
     public boolean isEnabled() {
-        return "vm".equalsIgnoreCase(runnerMode)
-                && host != null && !host.isBlank();
+        return "vm".equalsIgnoreCase(runnerMode) && !effectiveHost().isEmpty();
+    }
+
+    /**
+     * The configured host, or the IP that the VM start script writes to
+     * ip.txt. This keeps a plain `java -jar` launch working without the
+     * QNX_VM_HOST environment variable being set.
+     */
+    private String effectiveHost() {
+        if (host != null && !host.isBlank()) {
+            return host.trim();
+        }
+        try {
+            Path file = Path.of(hostFile);
+            if (Files.exists(file)) {
+                String ip = Files.readString(file, StandardCharsets.UTF_8).trim();
+                if (!ip.isEmpty()) {
+                    return ip;
+                }
+            }
+        } catch (Exception ignored) {
+            // Unreadable file: fall back to the legacy worker path.
+        }
+        return "";
     }
 
     public String describeTarget() {
-        return user + "@" + host;
+        return user + "@" + effectiveHost();
     }
 
     /**
